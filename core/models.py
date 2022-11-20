@@ -54,3 +54,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+class Password(models.Model):
+    title = models.CharField(max_length=128, unique=True)
+    password = models.CharField(_("password"), max_length=128)
+    date = models.DateTimeField(auto_now_add=True)

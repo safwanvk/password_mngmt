@@ -1,6 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import User
+from .models import User, Password
+from django.contrib.auth.hashers import (
+    make_password,
+)
+from .util import encrypt, decrypt
 
 class RegisterSerializer(serializers.ModelSerializer):
     
@@ -32,3 +36,39 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
         
         return user
+
+
+class PasswordSerializers(serializers.ModelSerializer):
+    """
+    Serializes a Password register object
+    """
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+    decrypt_password = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = Password
+        fields = ('id', 'title', 'password', 'date', 'decrypt_password')
+
+    def create(self, validated_data):
+        """
+        Create an return a new password
+        """
+        password = Password.objects.create(
+            title=validated_data['title'],
+            password=encrypt(validated_data['password'])
+            )
+
+        return password
+    
+    def update(self, instance, validated_data):
+        """Handle updating password model"""
+        if 'password' in validated_data:
+            password = validated_data.pop('password')
+            instance.password = encrypt(password)
+
+        return super().update(instance, validated_data)
+    
+    def get_decrypt_password(self, obj):
+        return decrypt(obj.password)
+
+
+
