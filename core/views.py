@@ -6,8 +6,8 @@ from rest_framework.exceptions import APIException
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from core.models import Password
-from .serializers import RegisterSerializer, PasswordSerializers
+from core.models import Password, Organization
+from .serializers import RegisterSerializer, PasswordSerializer, OrganizationSerializer
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
@@ -32,5 +32,10 @@ def registration(request):
 
 class PasswordViewSet(viewsets.ModelViewSet):
     queryset = Password.objects.all()
-    serializer_class = PasswordSerializers
+    serializer_class = PasswordSerializer
+    permission_classes = (IsAuthenticated,)
+
+class OrganizationViewSet(viewsets.ModelViewSet):
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
     permission_classes = (IsAuthenticated,)

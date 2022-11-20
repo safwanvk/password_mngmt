@@ -5,10 +5,11 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from .views import PasswordViewSet
+from .views import PasswordViewSet, OrganizationViewSet
 
 router = routers.SimpleRouter()
 router.register(r'passwords', PasswordViewSet)
+router.register(r'organizations', OrganizationViewSet)
 
 urlpatterns = [
     path('register/', registration, name='user_registration'),

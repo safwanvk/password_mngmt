@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import User, Password
+from .models import User, Password, Organization
 from django.contrib.auth.hashers import (
     make_password,
 )
@@ -38,7 +38,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class PasswordSerializers(serializers.ModelSerializer):
+class PasswordSerializer(serializers.ModelSerializer):
     """
     Serializes a Password register object
     """
@@ -70,5 +70,9 @@ class PasswordSerializers(serializers.ModelSerializer):
     def get_decrypt_password(self, obj):
         return decrypt(obj.password)
 
+class  OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = '__all__'
 
 

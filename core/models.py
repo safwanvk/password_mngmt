@@ -59,3 +59,14 @@ class Password(models.Model):
     title = models.CharField(max_length=128, unique=True)
     password = models.CharField(_("password"), max_length=128)
     date = models.DateTimeField(auto_now_add=True)
+
+# Organization Model
+class Organization(models.Model):
+    name = models.CharField(max_length=50, verbose_name='Name', null=True)
+    organizationId = models.CharField(max_length=10, unique=True, verbose_name='Organization id', null=True)
+    organizationSize = models.CharField(max_length=15, verbose_name='Organization Size', null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
