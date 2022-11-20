@@ -46,6 +46,7 @@ class User(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)  
     createdAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True)
+    organizations = models.ManyToManyField('Organization', blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

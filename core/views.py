@@ -5,8 +5,9 @@ from rest_framework.permissions import  AllowAny, IsAuthenticated
 from rest_framework.exceptions import APIException
 from rest_framework import status, viewsets
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from core.models import Password, Organization
+from core.models import Password, Organization, User
 from .serializers import RegisterSerializer, PasswordSerializer, OrganizationSerializer
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -39,3 +40,21 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     permission_classes = (IsAuthenticated,)
+    
+class OrganizationJoinMemberAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, organization_id):
+        """ Join as member """
+        try:
+            user = User.objects.get(email = request.data['email'])
+            try:
+                organization = Organization.objects.get(id=organization_id)
+                user.organizations.add(organization)
+                user.save()
+            except:
+                # No Organization found
+                return Response({'error': 'No Organization found.'}, status.HTTP_404_NOT_FOUND)
+            return Response({'message':'Successfully joined as member.'}, status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'message':'User does not exist. Please add as a new member.'}, status.HTTP_404_NOT_FOUND)
