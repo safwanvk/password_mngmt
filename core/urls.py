@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from .views import (PasswordViewSet, OrganizationViewSet,
-                    OrganizationJoinMemberAPIView)
+                    OrganizationJoinMemberAPIView, OrganizationAddPasswordsAPIView)
 
 router = routers.SimpleRouter()
 router.register(r'passwords', PasswordViewSet)
@@ -17,4 +17,5 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('organizations/<int:organization_id>/join-as-member/', OrganizationJoinMemberAPIView.as_view(), name='join_as_staff'),
+    path('organizations/<int:organization_id>/add-passwords/', OrganizationAddPasswordsAPIView.as_view(), name='add_passwords')
 ]+ router.urls

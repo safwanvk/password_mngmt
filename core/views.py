@@ -47,6 +47,8 @@ class OrganizationJoinMemberAPIView(APIView):
     def post(self, request, organization_id):
         """ Join as member """
         try:
+            if request.data.get('email', None) is None:
+                return Response({'message':'email is required'}, status.HTTP_400_BAD_REQUEST)
             user = User.objects.get(email = request.data['email'])
             try:
                 organization = Organization.objects.get(id=organization_id)
@@ -58,3 +60,23 @@ class OrganizationJoinMemberAPIView(APIView):
             return Response({'message':'Successfully joined as member.'}, status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'message':'User does not exist. Please add as a new member.'}, status.HTTP_404_NOT_FOUND)
+
+class OrganizationAddPasswordsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, organization_id):
+        """ Add passwords """
+        if request.data.get('passwords', None) is None:
+            return Response({'message':'passwords is required'}, status.HTTP_400_BAD_REQUEST)
+        passwords = request.data['passwords']
+        if len(passwords) == Password.objects.filter(id__in=passwords).count():
+            try:
+                organization = Organization.objects.get(id=organization_id)
+                organization.passwords.add(*passwords)
+                organization.save()
+            except:
+                # No Organization found
+                return Response({'error': 'No Organization found.'}, status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'message':'Passwords does not exist.'}, status.HTTP_404_NOT_FOUND)
+        return Response({'message':'Successfully added passwords.'}, status.HTTP_200_OK)

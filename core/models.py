@@ -68,6 +68,7 @@ class Organization(models.Model):
     organizationSize = models.CharField(max_length=15, verbose_name='Organization Size', null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    passwords = models.ManyToManyField('Password', blank=True)
 
     def __str__(self):
         return self.name
