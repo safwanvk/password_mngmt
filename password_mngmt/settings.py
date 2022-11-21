@@ -149,3 +149,4 @@ SIMPLE_JWT = {
 }
 
 ENCRYPT_KEY = b'tmzHcYuvLUhxjcxZ4k_iqfCx-HUq6PCvdbXr4vOC5B4='
+BASE_URL = 'http://127.0.0.1:8000'

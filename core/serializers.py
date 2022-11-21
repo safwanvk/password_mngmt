@@ -2,12 +2,14 @@ from datetime import timedelta
 import re
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import User, Password, Organization
+from .models import User, Password, Organization, Share
 from django.contrib.auth.hashers import (
     make_password,
 )
 from .util import encrypt, decrypt
 from django.utils import timezone
+from django.contrib.auth.models import Permission
+from django.conf import settings
 
 class RegisterSerializer(serializers.ModelSerializer):
     
@@ -90,8 +92,31 @@ class PasswordSerializer(serializers.ModelSerializer):
         return 'Expired' if obj.expired_at <= timezone.now() else 'Not expired'
 
 class  OrganizationSerializer(serializers.ModelSerializer):
+    users = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Organization
         fields = '__all__'
+    
+    def get_users(self, obj):
+        return User.objects.values_list('id', flat=True).filter(organizations=obj).distinct()
 
 
+class  ShareSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField(read_only=True)
+    class Meta:
+        model = Share
+        fields = '__all__'
+    
+    def get_url(self, obj):
+        return '%s/api/shared_passwords/%s/' % (settings.BASE_URL, obj.password.id)
+
+
+class  PermissionSerializer(serializers.ModelSerializer):
+    content_type_name = serializers.SerializerMethodField('get_content_type_name', read_only=True)
+
+    class Meta:
+        model = Permission
+        fields = '__all__'
+
+    def get_content_type_name(self, obj):
+        return obj.content_type.name

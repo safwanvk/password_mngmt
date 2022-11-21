@@ -6,10 +6,17 @@ from rest_framework.exceptions import APIException
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth.models import Permission
 
-from core.models import Password, Organization, User
-from .serializers import RegisterSerializer, PasswordSerializer, OrganizationSerializer
-
+from core.models import Password, Organization, User, Share
+from .serializers import (RegisterSerializer, PasswordSerializer, 
+                          OrganizationSerializer, ShareSerializer,
+                          PermissionSerializer)
+from django.http import JsonResponse
+from django.db.models.functions import Concat
+from django.db.models import Value as V
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from .permissions import ShareModelPermissions
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return  # To not perform the csrf check previously happening
@@ -84,3 +91,32 @@ class OrganizationAddPasswordsAPIView(APIView):
         else:
             return Response({'message':'Passwords does not exist.'}, status.HTTP_404_NOT_FOUND)
         return Response({'message':'Successfully added passwords.'}, status.HTTP_200_OK)
+
+class ShareViewSet(viewsets.ModelViewSet):
+    queryset = Share.objects.all()
+    serializer_class = ShareSerializer
+    permission_classes = (IsAuthenticated,)
+
+# Get all permissions
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
+def get_permissions(request):
+    permission_list = permissions_list_queryset()
+    serializer = PermissionSerializer(permission_list, many=True) 
+    return JsonResponse(serializer.data, safe=False)
+
+def permissions_list_queryset():
+    model_name = [
+        'core.password'
+    ]
+    permission_list = Permission.objects.select_related('content_type').annotate(
+            app_labeled_model = Concat('content_type__app_label', V('.'), 'content_type__model')
+        ).filter(app_labeled_model__in = model_name)
+        
+    return permission_list
+
+class SharedPasswordView(RetrieveUpdateDestroyAPIView):
+    serializer_class = PasswordSerializer
+    lookup_url_kwarg = 'password_id'
+    queryset = Password.objects.all()
+    permission_classes = (IsAuthenticated, ShareModelPermissions)

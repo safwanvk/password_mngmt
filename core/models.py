@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import Permission
+from django.shortcuts import get_object_or_404
 
 # Create your models here.
 class CustomUserManager(BaseUserManager):
@@ -61,6 +63,16 @@ class User(AbstractUser):
         organizations = Organization.objects.values_list('id', flat=True).filter(user=self)
         passwords = Password.objects.filter(organization_passwords__in=organizations).values_list('id', flat=True)
         return passwords
+    
+    def has_perms_in_password(self, password_id, perms):
+        password = get_object_or_404(Password, id=password_id)
+        shares = Share.objects.values_list('id', flat=True).filter(user=self, password_id=password_id)
+
+        return bool(Permission.objects.filter(share_permissions__in=shares, codename__in=perms).exists())
+
+    def has_perm_in_password(self, password_id, perm):
+        return self.has_perms_in_password(password_id, [perm])
+
 
 
 class Password(models.Model):
@@ -69,6 +81,9 @@ class Password(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     duration_in_days = models.IntegerField()
     expired_at = models.DateTimeField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.title
 
 # Organization Model
 class Organization(models.Model):
@@ -81,3 +96,8 @@ class Organization(models.Model):
 
     def __str__(self):
         return self.name
+
+class Share(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    password = models.ForeignKey(Password, on_delete=models.CASCADE)
+    permissions = models.ManyToManyField(Permission, related_name='share_permissions', blank=True)
