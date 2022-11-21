@@ -1,3 +1,4 @@
+import re
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from .models import User, Password, Organization
@@ -44,9 +45,10 @@ class PasswordSerializer(serializers.ModelSerializer):
     """
     password = serializers.CharField(write_only=True, validators=[validate_password])
     decrypt_password = serializers.SerializerMethodField(read_only=True)
+    strength = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Password
-        fields = ('id', 'title', 'password', 'date', 'decrypt_password')
+        fields = ('id', 'title', 'password', 'date', 'decrypt_password', 'strength')
 
     def create(self, validated_data):
         """
@@ -69,6 +71,12 @@ class PasswordSerializer(serializers.ModelSerializer):
     
     def get_decrypt_password(self, obj):
         return decrypt(obj.password)
+    
+    def get_strength(self, obj):
+        if(bool(re.match('((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,30})',decrypt(obj.password)))==True):
+            return "Strong"
+        elif(bool(re.match('((\d*)([a-z]*)([A-Z]*)([!@#$%^&*]*).{8,30})',decrypt(obj.password)))==True):
+            return "Weak"
 
 class  OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
