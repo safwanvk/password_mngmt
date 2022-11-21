@@ -35,6 +35,10 @@ class PasswordViewSet(viewsets.ModelViewSet):
     queryset = Password.objects.all()
     serializer_class = PasswordSerializer
     permission_classes = (IsAuthenticated,)
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(id__in=self.request.user.passwords)
+
 
 class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all()

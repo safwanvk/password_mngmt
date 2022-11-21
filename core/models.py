@@ -55,6 +55,13 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+    
+    @property
+    def passwords(self):
+        organizations = Organization.objects.values_list('id', flat=True).filter(user=self)
+        passwords = Password.objects.filter(organization_passwords__in=organizations).values_list('id', flat=True)
+        return passwords
+
 
 class Password(models.Model):
     title = models.CharField(max_length=128, unique=True)
@@ -68,7 +75,7 @@ class Organization(models.Model):
     organizationSize = models.CharField(max_length=15, verbose_name='Organization Size', null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    passwords = models.ManyToManyField('Password', blank=True)
+    passwords = models.ManyToManyField(Password, blank=True, related_name='organization_passwords')
 
     def __str__(self):
         return self.name
