@@ -1,3 +1,4 @@
+from datetime import timedelta
 import re
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
@@ -6,6 +7,7 @@ from django.contrib.auth.hashers import (
     make_password,
 )
 from .util import encrypt, decrypt
+from django.utils import timezone
 
 class RegisterSerializer(serializers.ModelSerializer):
     
@@ -46,9 +48,11 @@ class PasswordSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     decrypt_password = serializers.SerializerMethodField(read_only=True)
     strength = serializers.SerializerMethodField(read_only=True)
+    status = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Password
-        fields = ('id', 'title', 'password', 'date', 'decrypt_password', 'strength')
+        fields = ('id', 'title', 'password', 'date', 'decrypt_password', 'strength', 
+                  'duration_in_days', 'expired_at', 'status')
 
     def create(self, validated_data):
         """
@@ -56,7 +60,9 @@ class PasswordSerializer(serializers.ModelSerializer):
         """
         password = Password.objects.create(
             title=validated_data['title'],
-            password=encrypt(validated_data['password'])
+            password=encrypt(validated_data['password']),
+            duration_in_days=validated_data['duration_in_days'],
+            expired_at=timezone.now() + timedelta(days=validated_data['duration_in_days'])
             )
 
         return password
@@ -66,6 +72,8 @@ class PasswordSerializer(serializers.ModelSerializer):
         if 'password' in validated_data:
             password = validated_data.pop('password')
             instance.password = encrypt(password)
+        if 'duration_in_days' in validated_data:
+            instance.expired_at = instance.date + timedelta(days=validated_data['duration_in_days'])
 
         return super().update(instance, validated_data)
     
@@ -77,6 +85,9 @@ class PasswordSerializer(serializers.ModelSerializer):
             return "Strong"
         elif(bool(re.match('((\d*)([a-z]*)([A-Z]*)([!@#$%^&*]*).{8,30})',decrypt(obj.password)))==True):
             return "Weak"
+    
+    def get_status(self, obj):
+        return 'Expired' if obj.expired_at <= timezone.now() else 'Not expired'
 
 class  OrganizationSerializer(serializers.ModelSerializer):
     class Meta:

@@ -67,6 +67,8 @@ class Password(models.Model):
     title = models.CharField(max_length=128, unique=True)
     password = models.CharField(_("password"), max_length=128)
     date = models.DateTimeField(auto_now_add=True)
+    duration_in_days = models.IntegerField()
+    expired_at = models.DateTimeField(blank=True, null=True)
 
 # Organization Model
 class Organization(models.Model):
