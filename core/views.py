@@ -120,3 +120,21 @@ class SharedPasswordView(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'password_id'
     queryset = Password.objects.all()
     permission_classes = (IsAuthenticated, ShareModelPermissions)
+    
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """ User Listing """
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self, *args, **kwargs):
+        return User.objects.filter(is_superuser=False)
+
+# Get Auth User
+@api_view(['GET', 'PUT'])
+@permission_classes((IsAuthenticated, ))
+def authUser(request):
+    if request.method == "GET":
+        user = request.user
+        userserializer = RegisterSerializer(user)
+        return JsonResponse(userserializer.data, status=status.HTTP_200_OK)
