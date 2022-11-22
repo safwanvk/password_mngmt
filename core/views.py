@@ -7,6 +7,7 @@ from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import Permission
+from django.db.models import Q
 
 from core.models import Password, Organization, User, Share
 from .serializers import (RegisterSerializer, PasswordSerializer, 
@@ -44,7 +45,7 @@ class PasswordViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     
     def get_queryset(self):
-        return super().get_queryset().filter(id__in=self.request.user.passwords)
+        return super().get_queryset().filter(Q(id__in=self.request.user.passwords) | Q(created_by=self.request.user))
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):

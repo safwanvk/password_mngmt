@@ -54,7 +54,7 @@ class PasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Password
         fields = ('id', 'title', 'password', 'date', 'decrypt_password', 'strength', 
-                  'duration_in_days', 'expired_at', 'status')
+                  'duration_in_days', 'expired_at', 'status', 'created_by')
 
     def create(self, validated_data):
         """
@@ -64,7 +64,8 @@ class PasswordSerializer(serializers.ModelSerializer):
             title=validated_data['title'],
             password=encrypt(validated_data['password']),
             duration_in_days=validated_data['duration_in_days'],
-            expired_at=timezone.now() + timedelta(days=validated_data['duration_in_days'])
+            expired_at=timezone.now() + timedelta(days=validated_data['duration_in_days']),
+            created_by=self.context['request'].user
             )
 
         return password
